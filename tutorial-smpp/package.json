@@ -1,5 +1,5 @@
 {
-  "name": "saml2",
+  "name": "tutorial-smpp",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,8 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
-    "jsonwebtoken": "^8.5.1",
-    "saml2-js": "^2.0.5"
+    "smpp": "^0.4.0"
   }
 }

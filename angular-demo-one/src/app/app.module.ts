@@ -1,24 +1,22 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { HttpClientModule } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SsoLoginComponent } from './sso-login/sso-login.component';
 import { DasgboardComponent } from './dasgboard/dasgboard.component';
-import { SsoLoginCbComponent } from './sso-login-cb/sso-login-cb.component';
+import { SsoLogoutComponent } from './sso-logout/sso-logout.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SsoLoginComponent,
     DasgboardComponent,
-    SsoLoginCbComponent
+    SsoLogoutComponent,
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule
-  ],
+  imports: [BrowserModule, AppRoutingModule, HttpClientModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

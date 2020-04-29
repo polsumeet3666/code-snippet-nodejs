@@ -3,6 +3,7 @@ var fs = require("fs");
 var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
+var jwt = require("jsonwebtoken");
 app.use(
 	bodyParser.urlencoded({
 		extended: true,
@@ -15,6 +16,7 @@ var sp_options = {
 	private_key: fs.readFileSync("./certs/sp-key.pem").toString(),
 	certificate: fs.readFileSync("./certs/sp-cert.crt").toString(),
 	assert_endpoint: "http://localhost:8080/sso/acs",
+	//assert_endpoint: "http://localhost:4202/dashboard",
 	sign_get_request: false,
 	allow_unencrypted_assertion: true,
 	audience: "ps",
@@ -65,11 +67,18 @@ app.post("/sso/acs", function (req, res) {
 		session_index = saml_response.user.session_index;
 
 		//res.send(`Hello ${saml_response.user.name_id}!`);
-		res.setHeader("ssotoken", "hahahah");
+		//res.setHeader("ssotoken", "hahahah");
 
 		res.cookie("name_id", name_id);
 		res.cookie("session_index", session_index);
-		res.redirect("http://localhost:4202/dashboard");
+		console.log("req.body");
+		//console.log(req.body);
+		//res.cookie("data", req.body);
+		var token = jwt.sign({ foo: "bar" }, "shhhhh");
+		//console.log(token);
+		//res.cookie("t", token);
+		//res.send(template);
+		res.redirect("http://localhost:4202/dashboard?auth=" + token);
 	});
 });
 
@@ -91,4 +100,58 @@ app.get("/logout", function (req, res) {
 	});
 });
 
+app.get("/sso/ep1", function (req, res) {
+	console.log("ep1");
+	console.log(req.body);
+	res.send("ok");
+});
+
 app.listen(8080);
+
+var template = `
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script>
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toGMTString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+            window.location.replace("http://localhost:4202/dashboard");
+
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function checkCookie() {
+            var user = getCookie("username");
+            
+                user = prompt("Please enter your name:", "");
+                if (user != "" && user != null) {
+                    setCookie("username", user, 30);
+                }
+            
+        }
+    </script>
+</head>
+
+<body onload="checkCookie()"></body>
+
+</html>
+`;

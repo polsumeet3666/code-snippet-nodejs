@@ -1,0 +1,5 @@
+Server: smscsim.melroselabs.com
+Port: 2775 (non-TLS), 8775 (TLS)
+System ID: 670188
+Password: OGRVFF
+System type: null

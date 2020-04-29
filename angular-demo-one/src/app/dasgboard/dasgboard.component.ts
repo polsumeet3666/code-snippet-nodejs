@@ -10,6 +10,7 @@ export class DasgboardComponent implements OnInit {
   constructor(@Inject(DOCUMENT) private document: Document) {}
 
   ngOnInit(): void {
-    alert(this.document.cookie);
+    //alert(this.document.cookie);
+    console.log(document.location);
   }
 }
