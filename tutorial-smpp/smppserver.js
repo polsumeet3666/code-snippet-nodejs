@@ -4,7 +4,8 @@ let server = smpp.createServer((session) => {
 	session.on("bind_transceiver", (pdu) => {
 		session.pause();
 		console.log("\nreceived bind_txn");
-		console.log(pdu);
+		console.log(`process: ${process.pid} pdu : ${JSON.stringify(pdu)}`);
+		//		console.log(pdu);
 		checkAsyncUserPass(pdu.system_id, pdu.password, function (err) {
 			if (err) {
 				session.send(
@@ -15,7 +16,7 @@ let server = smpp.createServer((session) => {
 				session.close();
 				return;
 			}
-			console.log(`sending bind_txn_resp`);
+			console.log(`process: ${process.pid} sending bind_txn_resp`);
 
 			session.send(pdu.response());
 			session.resume();
@@ -32,25 +33,29 @@ let server = smpp.createServer((session) => {
 	 * 5. Receive deliver_sm_resp
 	 */
 	session.on("submit_sm", (pdu) => {
-		console.log("\nreceived submit_sm");
-		console.log(pdu);
-		session.pause();
-		console.log("\nsending submit_sm_resp");
+		//console.log("\nreceived submit_sm");
+		console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
+		//session.pause();
+		//console.log("\nsending submit_sm_resp");
 		session.send(pdu.response());
-		session.resume();
+		//session.resume();
 
-		sendDeliveryReceipt(
-			session,
-			{
-				source_addr_ton: "1",
-				source_addr_npi: "2",
-				source_addr: "sa",
-			},
-			(pdu) => {
-				console.log("\ndeliver_sm call back");
-				console.log(pdu);
-			}
-		);
+		// sendDeliveryReceipt(
+		// 	session,
+		// 	{
+		// 		source_addr_ton: "1",
+		// 		source_addr_npi: "2",
+		// 		source_addr: "sa",
+		// 	},
+		// 	(pdu) => {
+		// 		console.log("\ndeliver_sm call back");
+		// 		console.log(pdu);
+		// 	}
+		// );
+	});
+	session.on("unbind", (pdu) => {
+		console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
+		session.send(pdu.response());
 	});
 });
 
