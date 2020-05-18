@@ -1,0 +1,8 @@
+5.2.19
+data_coding
+esm_class
+protocol_id
+priority_flag
+sm_default_msg_id
+
+परिक्षण

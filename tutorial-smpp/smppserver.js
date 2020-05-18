@@ -57,6 +57,11 @@ let server = smpp.createServer((session) => {
 		console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
 		session.send(pdu.response());
 	});
+
+	session.on("enquire_link", (pdu) => {
+		console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
+		session.send(pdu.response());
+	});
 });
 
 let checkAsyncUserPass = async (id, password, cb) => {
