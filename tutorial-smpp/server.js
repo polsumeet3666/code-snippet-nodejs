@@ -37,7 +37,7 @@ let server = smpp.createServer((session) => {
 	});
 
 	session.on("submit_sm", (pdu) => {
-		//console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
+		console.log(`process: ${process.pid} pdu: ${JSON.stringify(pdu)}`);
 		//session.pause();
 
 		session.send(pdu.response());

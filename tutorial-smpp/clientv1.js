@@ -1,10 +1,10 @@
 var smpp = require("smpp");
 let log = require("log-update");
 
-let connCount = 2,
+let connCount = 1,
 	submitSm = 0,
 	submitSmResp = 0,
-	testMsgCount = 5000;
+	testMsgCount = 1;
 
 let sd = null,
 	ed = null;
