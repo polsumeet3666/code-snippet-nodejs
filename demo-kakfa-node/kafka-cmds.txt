@@ -1,0 +1,250 @@
+
+topic
+	partitions
+		offsets
+
+
+brokers
+	id - int
+
+mkdir -p data/zookeeper
+
+zookeeper.properties  change dataDir= data/zookeeper
+start cmd : ./bin/zookeeper-server-start.sh config/zookeeper.properties 
+
+
+mkdir -p data/kafka
+server.properties chnages log.dirs = data/kafka
+start cmd : ./bin/kafka-server-start.sh config/server.properties
+
+## kafka cli
+
+# create new topic 
+
+./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --create
+Missing required argument "[partitions]"
+
+
+./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --create --partitions 3
+Missing required argument "[replication-factor]"
+
+
+./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --create --partitions 3 --replication-factor 2
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Error while executing topic command : Replication factor: 2 larger than available brokers: 1.
+
+./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --create --partitions 3 --replication-factor 1
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic first_topic
+
+
+# list topic 
+/bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+first_topic
+
+
+# describe topic
+./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic first_topic --describe
+Topic: first_topic	PartitionCount: 3	ReplicationFactor: 1	Configs: 
+	Topic: first_topic	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: first_topic	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: first_topic	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+
+
+demo 
+./bin/kafka-topics.sh -zookeeper 127.0.0.1:2181 --topic second_topic --create --partitions 6 --replication-factor 1
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic second_topic.
+
+
+/bin/kafka-topics.sh -zookeeper 127.0.0.1:2181 --list                                                             
+first_topic
+second_topic
+
+./bin/kafka-topics.sh -zookeeper 127.0.0.1:2181 --topic second_topic --describe
+Topic: second_topic	PartitionCount: 6	ReplicationFactor: 1	Configs: 
+	Topic: second_topic	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: second_topic	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+
+./bin/kafka-topics.sh -zookeeper 127.0.0.1:2181 --topic second_topic --delete  
+Topic second_topic is marked for deletion.
+Note: This will have no impact if delete.topic.enable is not set to true.
+
+./bin/kafka-topics.sh -zookeeper 127.0.0.1:2181 --list                       
+first_topic
+
+
+## kafka-console-producer
+
+--broker-list is requried 
+
+
+./bin/kafka-console-producer.sh --broker-list 127.0.0.1:9092 --topic first_topic 
+>this is msg from first topic
+>sample msg 1 :-)
+>^C%                                                                                                                                         
+
+./bin/kafka-console-producer.sh --broker-list 127.0.0.1:9092 --topic first_topic --producer-property acks=all
+>msg with property acks=al
+>^C%                                                                                                                                         
+
+./bin/kafka-console-producer.sh --broker-list 127.0.0.1:9092 --topic new_topic                               
+>this is msg for new_topic
+[2020-05-20 15:29:47,589] WARN [Producer clientId=console-producer] Error while fetching metadata with correlation id 3 : {new_topic=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+[2020-05-20 15:29:47,689] WARN [Producer clientId=console-producer] Error while fetching metadata with correlation id 4 : {new_topic=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+>retry for msg
+>
+
+
+Note :
+producing msg to not existing topic using kafka-console-producer will create topic
+
+--list will have both the topics(first_topic & new_topic)
+created with default config for partitions and replication factors
+you can also change default number set for partitions and replication factors in server.properties
+restart is required
+
+
+ ./bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic new_topic --describe          [15:56:28]
+Topic: new_topic	PartitionCount: 1	ReplicationFactor: 1	Configs: 
+	Topic: new_topic	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+
+
+
+## kafka-console-consumer
+
+IMP:
+it works as stream inspector. it will show only msgs produce after starting consumer
+
+./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic (real-time inspection)
+IMP:
+there will be no ordering as it are read from multiple partitions
+
+if order is important then use single partition (order is garunteed on partition level)
+
+
+
+# cosumer groups usinf console-consumer
+./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --group my-app-1
+
+IMP: 
+	above consumer group will read from all partitions
+	if number of consumers in group is increase it will share load from partitions
+	number of consumers should be greater than partitions
+
+IMP:
+	after reading msgs consumer group commits the offset 
+	--from-beginning will work only once for a consumer group(because offset are committed)
+
+demo 
+
+ $ ./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --group my-app-1
+this is msg 4
+^CProcessed a total of 1 messages
+
+ $ ./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --group my-app-1 --from-beginning
+this is msg 5
+^CProcessed a total of 1 messages
+
+ $ ./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --group my-app-2 --from-beginning
+this is msg from first topic
+this is msg 2
+this is msg 4
+sample msg 1 :-)
+msg with property acks=al
+this is msg 3
+this is msg 5
+^CProcessed a total of 7 messages
+
+ $ ./bin/kafka-console-consumer.sh --bootstrap-server 127.0.0.1:9092 --topic first_topic --group my-app-2 --from-beginning
+
+
+
+## kafka-consumer-groups
+
+details of all consumer groups created so far
+sometime has name of console-consumers also
+
+--list
+
+--describe --group my-app-1
+CURRENT-OFFEST - latest position in topic
+LOG-END-OFFEST -  read position in topic
+LAG - number msgs remaning to read
+
+IMP:
+	use to check number of consumer running from which server
+
+
+ $ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-app-2
+
+Consumer group 'my-app-2' has no active members.
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+my-app-2        first_topic     0          3               3               0               -               -               -
+my-app-2        first_topic     1          4               4               0               -               -               -
+my-app-2        first_topic     2          0               0               0               -               -               -
+
+ $ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-app-1
+
+Consumer group 'my-app-1' has no active members.
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+my-app-1        first_topic     0          3               3               0               -               -               -
+my-app-1        first_topic     1          4               5               1               -               -               -
+my-app-1        first_topic     2          0               1               1               -               -               -
+
+ $ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-app-1
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                              HOST            CLIENT-ID
+my-app-1        first_topic     0          3               3               0               consumer-my-app-1-1-99e13e99-2c32-4c57-84b1-53ea26722f81 /192.168.0.112  consumer-my-app-1-1
+my-app-1        first_topic     1          5               5               0               consumer-my-app-1-1-99e13e99-2c32-4c57-84b1-53ea26722f81 /192.168.0.112  consumer-my-app-1-1
+my-app-1        first_topic     2          1               1               0               consumer-my-app-1-1-99e13e99-2c32-4c57-84b1-53ea26722f81 /192.168.0.112  consumer-my-app-1-1
+
+ $ 
+
+
+
+## Resetting offset
+
+## RESET to 0
+
+ $ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-app-1 --reset-offsets --to-earliest --execute --topic first_topic
+
+GROUP                          TOPIC                          PARTITION  NEW-OFFSET     
+my-app-1                       first_topic                    0          0              
+my-app-1                       first_topic                    1          0              
+my-app-1                       first_topic                    2          0 
+
+/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic first_topic --group my-app-1
+this is msg from first topic
+this is msg 2
+this is msg 4
+sample msg 1 :-)
+msg with property acks=al
+this is msg 3
+this is msg 5
+this is msg 7
+this is msg 6
+
+
+$ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-app-1 --describe                                                 
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                              HOST            CLIENT-ID
+my-app-1        first_topic     0          3               3               0               consumer-my-app-1-1-95cc7b1b-abcf-482f-9fb2-eb6e9f8cb6a2 /192.168.0.112  consumer-my-app-1-1
+my-app-1        first_topic     1          5               5               0               consumer-my-app-1-1-95cc7b1b-abcf-482f-9fb2-eb6e9f8cb6a2 /192.168.0.112  consumer-my-app-1-1
+my-app-1        first_topic     2          1               1               0               consumer-my-app-1-1-95cc7b1b-abcf-482f-9fb2-eb6e9f8cb6a2 /192.168.0.112  consumer-my-app-1-1
+
+
+
+## SHIFT BY 2 (FORWARD) on each parition
+
+$ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-app-1 --reset-offsets --shift-by 2 --execute --topic 
+
+## SHIFT BY -2 (BACKWARD) on each parition
+
+$ ./bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my-app-1 --reset-offsets --shift-by -2 --execute --topic 
