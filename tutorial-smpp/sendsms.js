@@ -4,8 +4,8 @@ var session = smpp.connect("smpp://smscsim.melroselabs.com:2775");
 // bind txn
 session.bind_transceiver(
 	{
-		system_id: "670188",
-		password: "OGRVFF",
+		system_id: "",
+		password: "",
 	},
 	function (pdu) {
 		if (pdu.command_status == 0) {
@@ -14,7 +14,7 @@ session.bind_transceiver(
 
 			session.submit_sm(
 				{
-					destination_addr: "9082963535",
+					destination_addr: "",
 					short_message: "hello world",
 				},
 				function (pdu) {
